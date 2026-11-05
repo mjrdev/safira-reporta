@@ -12,6 +12,7 @@
     <button class="btn btn-secundario" type="submit">Filtrar</button>
     <a class="btn btn-primario" href="{% url 'relatorio' %}?{{ query }}">📄 Gerar relatório</a>
   </div>
+  <a class="btn btn-secundario" href="{% url 'indicadores' %}">📊 Ver indicadores</a>
 </form>
 
 <div id="mapa" class="mapa card" role="region" aria-label="Mapa das demandas filtradas"></div>

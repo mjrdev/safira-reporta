@@ -100,3 +100,47 @@ def test_painel_mostra_dados_pessoais_apenas_para_logado(cliente_logado, demanda
 def test_mapa_do_painel_tem_papel_e_rotulo_acessiveis(cliente_logado, demanda):
     resp = cliente_logado.get(reverse("painel"))
     assert 'role="region" aria-label="Mapa das demandas filtradas"' in resp.text
+
+
+def test_saude_responde_ok_sem_login(client, db):
+    resp = client.get(reverse("saude"))
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok", "banco": "ok"}
+    assert "no-cache" in resp["Cache-Control"]
+
+
+def test_saude_retorna_503_quando_o_banco_falha(client, db, monkeypatch):
+    from django.db import connection
+
+    def quebrado():
+        raise RuntimeError("banco fora")
+
+    monkeypatch.setattr(connection, "cursor", quebrado)
+    resp = client.get(reverse("saude"))
+    assert resp.status_code == 503
+    assert resp.json()["banco"] == "indisponivel"
+
+
+def test_indicadores_exige_login(client):
+    resp = client.get(reverse("indicadores"))
+    assert resp.status_code == 302 and reverse("login") in resp["Location"]
+
+
+def test_indicadores_somam_demandas_apoios_e_status(cliente_logado, demanda, operador):
+    from reports.services import registrar_apoio
+
+    registrar_apoio(demanda, "98922223333")
+    demanda.avancar_status(operador)
+    resp = cliente_logado.get(reverse("indicadores"))
+    assert resp.status_code == 200
+    ctx = resp.context
+    assert ctx["total"] == 1 and ctx["afetados"] == 2 and ctx["apoios"] == 1
+    assert ctx["levadas"] == 1 and ctx["pct_levadas"] == 100 and ctx["resolvidas"] == 0
+    assert ctx["dias_ate_prefeitura"] is not None
+    assert "Esgoto a céu aberto" in resp.text and "Cláudia" not in resp.text
+
+
+def test_indicadores_sem_demandas(cliente_logado):
+    resp = cliente_logado.get(reverse("indicadores"))
+    assert resp.context["total"] == 0 and resp.context["dias_ate_prefeitura"] is None
+    assert "Ainda não há demandas" in resp.text

@@ -20,6 +20,12 @@ DEBUG = env_bool("DEBUG", False)
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
 
+# Render informa o domínio público do serviço nesta variável
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+
 # Chave usada no HMAC do telefone dos apoios (Apoio.telefone_hash)
 PHONE_HASH_KEY = os.environ.get("PHONE_HASH_KEY", SECRET_KEY)
 
@@ -150,3 +156,16 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+# Monitoramento de erros (opcional): ativado só quando SENTRY_DSN existe.
+# send_default_pii=False para não enviar nome, telefone, IP nem cookies dos moradores.
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+if SENTRY_DSN:  # pragma: no cover
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=os.environ.get("SENTRY_ENVIRONMENT", "producao"),
+        send_default_pii=False,
+        traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+    )
