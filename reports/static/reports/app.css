@@ -50,3 +50,13 @@ fieldset { border: 1px solid var(--linha); }
 summary { list-style: none; } summary::-webkit-details-marker { display: none; }
 details[open] summary { margin-bottom: 12px; }
 .inline { display: inline; } .link-claro { background: none; border: 0; color: #fff; text-decoration: underline; font: inherit; cursor: pointer; min-height: 44px; }
+
+/* Indicador de carregamento ao preparar e enviar a foto.
+   Ajuste do feedback da 2ª rodada de validação com moradores: sem retorno visual durante o upload. */
+.status-carregando { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--azul); margin: 10px 0; }
+.status-carregando[hidden] { display: none; }
+.status-carregando.centro { justify-content: center; }
+.spinner { width: 22px; height: 22px; flex: none; border: 3px solid var(--linha); border-top-color: var(--azul); border-radius: 50%; animation: girar .8s linear infinite; }
+.btn[aria-disabled=true] { opacity: .75; cursor: progress; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }

@@ -44,6 +44,7 @@
     <label for="{{ form.foto.id_for_label }}">2. {{ form.foto.label }} <span class="texto-suave">(JPG ou PNG, até 2 MB)</span></label>
     <input type="file" name="foto" id="{{ form.foto.id_for_label }}" accept="image/jpeg,image/png" capture="environment"
            {% if form.foto.errors %}aria-invalid="true" aria-describedby="erro-foto"{% endif %}>
+    <p id="status-foto" class="status-carregando texto-suave" role="status" aria-live="polite" hidden></p>
     <img id="previa-foto" class="previa" alt="Prévia da foto escolhida" hidden>
     {% for e in form.foto.errors %}<p class="erro" id="erro-foto">⚠ {{ e }}</p>{% endfor %}
     {% if proximas %}<p class="texto-suave">Por segurança, escolha a foto de novo se for enviar como novo problema.</p>{% endif %}
@@ -76,7 +77,8 @@
   </div>
 
   {% if proximas %}<input type="hidden" name="confirmar_novo" value="1">{% endif %}
-  <button class="btn btn-primario" type="submit">{% if proximas %}Enviar como novo problema{% else %}Enviar problema →{% endif %}</button>
+  <p id="status-envio" class="status-carregando centro" role="status" aria-live="polite" hidden></p>
+  <button class="btn btn-primario" type="submit" id="botao-enviar" data-texto-enviando="Enviando a foto, aguarde…">{% if proximas %}Enviar como novo problema{% else %}Enviar problema →{% endif %}</button>
 </form>
 {% endblock %}
 
