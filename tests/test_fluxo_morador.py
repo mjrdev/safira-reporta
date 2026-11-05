@@ -136,6 +136,15 @@ def test_pagina_de_resolvidos_lista_so_resolvidos_sem_dados_pessoais(client, dem
     assert "Cláudia" not in resp.text
 
 
+def test_tela_de_registro_tem_indicadores_de_carregamento_acessiveis(client, db):
+    resp = client.get(reverse("registrar"))
+    assert resp.status_code == 200
+    assert 'id="status-foto"' in resp.text
+    assert 'id="status-envio"' in resp.text
+    assert resp.text.count('role="status" aria-live="polite"') >= 2
+    assert 'id="botao-enviar" data-texto-enviando="Enviando a foto, aguarde…"' in resp.text
+
+
 def test_respostas_tem_content_security_policy(client, db):
     resp = client.get(reverse("home"))
     assert "default-src 'self'" in resp["Content-Security-Policy"]
