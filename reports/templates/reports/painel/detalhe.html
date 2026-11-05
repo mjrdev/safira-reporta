@@ -1,0 +1,29 @@
+{% extends "reports/base.html" %}
+{% block voltar %}<a class="voltar" href="{% url 'painel' %}">← Painel</a>{% endblock %}
+{% block cabecalho %}{{ demanda.protocolo }}{% endblock %}
+{% block subtitulo %}{{ demanda.categoria.nome }} · {{ demanda.get_status_display }}{% endblock %}
+{% block conteudo %}
+<section class="card">
+  <img class="foto-grande" src="{{ demanda.foto.url }}" alt="Foto do problema: {{ demanda.categoria.nome }}">
+  <p>{{ demanda.descricao }}</p>
+  <p class="texto-suave">{{ demanda.ponto_referencia }}{% if demanda.latitude %} · {{ demanda.latitude }}, {{ demanda.longitude }}{% endif %}</p>
+  <p><strong>{{ demanda.total_afetados }}</strong> morador{{ demanda.total_afetados|pluralize:"es" }} afetado{{ demanda.total_afetados|pluralize }}</p>
+  <p class="texto-suave">Registrado por {{ demanda.nome_morador }} · {{ demanda.telefone_morador }}</p>
+</section>
+
+<section class="card">
+  <h2>Histórico</h2>
+  <ol>
+    {% for h in demanda.historico.all %}
+      <li>{{ h.alterado_em|date:"d/m/Y H:i" }} – {{ h.get_status_novo_display }}{% if h.alterado_por %} ({{ h.alterado_por }}){% endif %}{% if h.observacao %}: {{ h.observacao }}{% endif %}</li>
+    {% endfor %}
+  </ol>
+  {% if demanda.proximo_status %}
+  <form method="post" action="{% url 'avancar_status' demanda.protocolo %}">
+    {% csrf_token %}
+    {{ status_form.as_p }}
+    <button class="btn btn-primario" type="submit">Marcar como “{% if demanda.proximo_status == 'levado_prefeitura' %}Levado à prefeitura{% else %}Resolvido{% endif %}”</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

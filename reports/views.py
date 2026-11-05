@@ -1,13 +1,16 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import ApoioForm, ConsultaForm, DemandaForm
+from .forms import ApoioForm, ConsultaForm, DemandaForm, FiltroPainelForm, StatusForm
 from .models import Demanda
 from .services import demandas_proximas, registrar_apoio
 
@@ -106,3 +109,96 @@ def resolvidos(request):
     """RF08 – página pública de problemas resolvidos, sem dados pessoais."""
     demandas = Demanda.objects.filter(status=Demanda.Status.RESOLVIDO).select_related("categoria")[:50]
     return render(request, "reports/resolvidos.html", {"demandas": demandas})
+
+
+# ---------------------- Painel da associação (RF03, RF04, RF05, RF07) ----------------------
+
+
+def _filtrar(request):
+    form = FiltroPainelForm(request.GET or None)
+    qs = Demanda.objects.select_related("categoria")
+    if form.is_valid():
+        if form.cleaned_data.get("categoria"):
+            qs = qs.filter(categoria=form.cleaned_data["categoria"])
+        if form.cleaned_data.get("grupo"):
+            qs = qs.filter(categoria__grupo=form.cleaned_data["grupo"])
+        if form.cleaned_data.get("status"):
+            qs = qs.filter(status=form.cleaned_data["status"])
+    return form, qs
+
+
+@login_required
+def painel(request):
+    form, qs = _filtrar(request)
+    pagina = Paginator(qs, 20).get_page(request.GET.get("page"))
+    pontos = [
+        {
+            "lat": float(d.latitude),
+            "lon": float(d.longitude),
+            "cor": d.categoria.cor_mapa,
+            "titulo": f"{d.protocolo} – {d.categoria.nome}",
+            "url": f"/painel/demanda/{d.protocolo}/",
+        }
+        for d in pagina
+        if d.latitude is not None
+    ]
+    return render(
+        request,
+        "reports/painel/lista.html",
+        {"form": form, "pagina": pagina, "pontos": pontos, "query": request.GET.urlencode()},
+    )
+
+
+@login_required
+def detalhe(request, protocolo):
+    demanda = get_object_or_404(Demanda.objects.select_related("categoria"), protocolo=protocolo)
+    return render(request, "reports/painel/detalhe.html", {"demanda": demanda, "status_form": StatusForm()})
+
+
+@login_required
+@require_POST
+def avancar_status(request, protocolo):
+    demanda = get_object_or_404(Demanda, protocolo=protocolo)
+    form = StatusForm(request.POST)
+    if form.is_valid():
+        try:
+            demanda.avancar_status(request.user, form.cleaned_data["observacao"])
+            messages.success(request, f"Status atualizado para “{demanda.get_status_display()}”.")
+        except ValidationError as exc:
+            messages.error(request, exc.messages[0])
+    return redirect("detalhe", protocolo=protocolo)
+
+
+@login_required
+def relatorio(request):
+    """RF05 – página pronta para impressão/PDF, sem nome nem telefone dos moradores."""
+    form, qs = _filtrar(request)
+    return render(request, "reports/painel/relatorio.html", {"demandas": qs, "form": form})
+
+
+# ---------------------- Login com limite de tentativas (RNF01) ----------------------
+
+
+class LoginView(auth_views.LoginView):
+    template_name = "registration/login.html"
+
+    def _chave(self):
+        usuario = (self.request.POST.get("username") or "").lower()[:150]
+        return f"login:{_ip(self.request)}:{usuario}"
+
+    def post(self, request, *args, **kwargs):
+        if cache.get(self._chave(), 0) >= settings.LOGIN_MAX_TENTATIVAS:
+            form = self.get_form()
+            form.errors.clear()
+            form.add_error(None, "Muitas tentativas. Aguarde 15 minutos e tente de novo.")
+            return self.render_to_response(self.get_context_data(form=form), status=429)
+        return super().post(request, *args, **kwargs)
+
+    def form_invalid(self, form):
+        chave = self._chave()
+        cache.set(chave, cache.get(chave, 0) + 1, settings.LOGIN_BLOQUEIO_SEGUNDOS)
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        cache.delete(self._chave())
+        return super().form_valid(form)

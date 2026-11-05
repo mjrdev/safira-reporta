@@ -1,0 +1,15 @@
+{% extends "reports/base.html" %}
+{% block cabecalho %}Entrar no painel{% endblock %}
+{% block subtitulo %}Acesso restrito à Associação de Moradores{% endblock %}
+{% block conteudo %}
+<form method="post" class="card" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alerta alerta-error" role="alert">⚠ {{ form.non_field_errors.0 }}</div>{% endif %}
+  <label for="id_username">Usuário</label>
+  <input id="id_username" name="username" autocomplete="username" required value="{{ form.username.value|default:'' }}">
+  <label for="id_password">Senha</label>
+  <input id="id_password" name="password" type="password" autocomplete="current-password" required>
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn btn-primario" type="submit">Entrar</button>
+</form>
+{% endblock %}

@@ -1,0 +1,8 @@
+body { font-family: system-ui, Arial, sans-serif; color: #1A2530; margin: 24px; font-size: 12pt; }
+header { border-bottom: 2px solid #0E3A5B; margin-bottom: 16px; }
+h1 { font-size: 18pt; color: #0E3A5B; margin: 0 0 4px; }
+h2 { font-size: 13pt; margin: 0 0 4px; }
+article { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid #D5DCE3; page-break-inside: avoid; }
+article img { width: 180px; height: 135px; object-fit: cover; border-radius: 6px; }
+p { margin: 2px 0; }
+@media print { .nao-imprimir { display: none; } body { margin: 0; } @page { size: A4; margin: 15mm; } }

@@ -119,6 +119,14 @@ def test_consulta_tem_limite_por_ip(client, settings, db):
     assert client.get(reverse("consultar")).status_code == 429
 
 
+def test_descricao_com_script_e_exibida_escapada(cliente_logado, client, esgoto):
+    client.post(reverse("registrar"), dados_registro(esgoto, descricao="<script>alert(1)</script>"))
+    d = Demanda.objects.get()
+    resp = cliente_logado.get(reverse("detalhe", args=[d.protocolo]))
+    assert "<script>alert(1)</script>" not in resp.text
+    assert "&lt;script&gt;alert(1)&lt;/script&gt;" in resp.text
+
+
 def test_pagina_de_resolvidos_lista_so_resolvidos_sem_dados_pessoais(client, demanda, operador):
     assert "Ainda não há problemas" in client.get(reverse("resolvidos")).text
     demanda.avancar_status(operador)
@@ -126,3 +134,8 @@ def test_pagina_de_resolvidos_lista_so_resolvidos_sem_dados_pessoais(client, dem
     resp = client.get(reverse("resolvidos"))
     assert "Esgoto a céu aberto" in resp.text
     assert "Cláudia" not in resp.text
+
+
+def test_respostas_tem_content_security_policy(client, db):
+    resp = client.get(reverse("home"))
+    assert "default-src 'self'" in resp["Content-Security-Policy"]
