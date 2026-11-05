@@ -5,13 +5,15 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db.models import Count, Q
-from django.http import HttpResponse
+from django.db import connection
+from django.db.models import Avg, Count, F, Q, Sum
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_GET, require_POST
 
 from .forms import ApoioForm, ConsultaForm, DemandaForm, FiltroPainelForm, StatusForm
-from .models import Demanda
+from .models import Demanda, HistoricoStatus
 from .services import demandas_proximas, registrar_apoio
 
 
@@ -174,6 +176,51 @@ def relatorio(request):
     """RF05 – página pronta para impressão/PDF, sem nome nem telefone dos moradores."""
     form, qs = _filtrar(request)
     return render(request, "reports/painel/relatorio.html", {"demandas": qs, "form": form})
+
+
+@login_required
+def indicadores(request):
+    """Indicadores de uso e impacto para a associação (EP4)."""
+    total = Demanda.objects.count()
+    por_status = dict(Demanda.objects.values_list("status").annotate(n=Count("id")).values_list("status", "n"))
+    levadas = por_status.get(Demanda.Status.LEVADO, 0) + por_status.get(Demanda.Status.RESOLVIDO, 0)
+    resolvidas = por_status.get(Demanda.Status.RESOLVIDO, 0)
+    afetados = Demanda.objects.aggregate(s=Sum("total_afetados"))["s"] or 0
+    por_categoria = (
+        Demanda.objects.values("categoria__icone", "categoria__nome", "categoria__grupo")
+        .annotate(n=Count("id"), afetados=Sum("total_afetados"))
+        .order_by("-n", "categoria__nome")
+    )
+    tempo_medio = HistoricoStatus.objects.filter(status_novo=Demanda.Status.LEVADO).aggregate(
+        t=Avg(F("alterado_em") - F("demanda__criado_em"))
+    )["t"]
+    contexto = {
+        "total": total,
+        "levadas": levadas,
+        "resolvidas": resolvidas,
+        "pct_levadas": round(100 * levadas / total) if total else 0,
+        "pct_resolvidas": round(100 * resolvidas / total) if total else 0,
+        "afetados": afetados,
+        "apoios": afetados - total,
+        "por_categoria": por_categoria,
+        "dias_ate_prefeitura": round(tempo_medio.total_seconds() / 86400, 1) if tempo_medio else None,
+    }
+    return render(request, "reports/painel/indicadores.html", contexto)
+
+
+# ---------------------- Monitoramento ----------------------
+
+
+@never_cache
+@require_GET
+def saude(request):
+    """Health check para o Render e o UptimeRobot: confere se a aplicação responde e o banco conecta."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        return JsonResponse({"status": "ok", "banco": "ok"})
+    except Exception:  # noqa: BLE001 - qualquer falha de banco vira 503 para o monitor
+        return JsonResponse({"status": "erro", "banco": "indisponivel"}, status=503)
 
 
 # ---------------------- Login com limite de tentativas (RNF01) ----------------------

@@ -18,6 +18,7 @@ Projeto da disciplina de Projeto de Software (Experiências Práticas I, II e II
 | RF06 | “Também sou afetado”: apoio a demanda próxima (até 100 m) sem duplicar | registro e consulta |
 | RF07 | Mapa das demandas no painel (Leaflet + OpenStreetMap) | `/painel/` |
 | RF08 | Página pública de problemas resolvidos | `/resolvidos/` |
+| RF09 | Indicadores de uso e impacto para a associação | `/painel/indicadores/` |
 
 Segurança (RNF01/RNF02): senhas com Argon2id, sessão com cookies seguros, limite de tentativas de login
 e de consultas, CSRF, CSP, ORM (consultas parametrizadas), escape automático nos templates, validação e
@@ -57,6 +58,22 @@ Com Docker: `docker compose up --build` (sobe PostgreSQL 16 + aplicação).
 pytest --cov --cov-report=term-missing
 ruff check . && ruff format --check .
 ```
+
+## Publicação (Render) e monitoramento
+
+O arquivo `render.yaml` cria no [Render](https://render.com) o banco PostgreSQL e o serviço web:
+
+1. No Render: **New → Blueprint** e escolha este repositório.
+2. Preencha as variáveis marcadas como `sync: false` (usuário inicial do painel e, se quiser, `SENTRY_DSN` e o bucket de fotos).
+3. Cada push na `main` com a CI verde gera um novo deploy (`autoDeploy`).
+
+Monitoramento pós-lançamento:
+
+- `GET /saude/` responde `{"status": "ok", "banco": "ok"}` (ou HTTP 503 se o banco cair). É o health check do Render e o endereço vigiado pelo UptimeRobot a cada 5 minutos.
+- Erros da aplicação vão para o Sentry quando `SENTRY_DSN` está definido, sem dados pessoais (`send_default_pii=False`).
+- Logs de acesso do gunicorn ficam na aba **Logs** do Render.
+
+No plano gratuito o disco é apagado a cada deploy. Para as fotos não se perderem, configure o Supabase Storage nas variáveis `AWS_*`.
 
 ## Integração contínua
 

@@ -60,3 +60,11 @@ details[open] summary { margin-bottom: 12px; }
 .btn[aria-disabled=true] { opacity: .75; cursor: progress; }
 @keyframes girar { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
+
+/* Indicadores (EP4) */
+.indicadores { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 0; }
+.indicadores div { border: 1px solid var(--linha); border-radius: 10px; padding: 10px 12px; }
+.indicadores dt { font-size: 14px; color: var(--suave); }
+.indicadores dd { margin: 4px 0 0; font-size: 24px; font-weight: 700; color: var(--azul); }
+.tabela { width: 100%; border-collapse: collapse; }
+.tabela th, .tabela td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--linha); }

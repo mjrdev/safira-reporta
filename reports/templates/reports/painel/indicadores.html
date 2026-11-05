@@ -1,0 +1,35 @@
+{% extends "reports/base.html" %}
+{% block title %}Indicadores – Safira Reporta{% endblock %}
+{% block voltar %}<a class="link-claro" href="{% url 'painel' %}">← Painel</a>{% endblock %}
+{% block cabecalho %}Indicadores{% endblock %}
+{% block subtitulo %}Situação de todas as demandas registradas{% endblock %}
+
+{% block conteudo %}
+<section class="card" aria-labelledby="titulo-resumo">
+  <h2 id="titulo-resumo">Resumo</h2>
+  <dl class="indicadores">
+    <div><dt>Demandas registradas</dt><dd>{{ total }}</dd></div>
+    <div><dt>Moradores afetados</dt><dd>{{ afetados }}</dd></div>
+    <div><dt>Apoios "Também sou afetado"</dt><dd>{{ apoios }}</dd></div>
+    <div><dt>Levadas à prefeitura</dt><dd>{{ levadas }} <span class="texto-suave">({{ pct_levadas }}%)</span></dd></div>
+    <div><dt>Resolvidas</dt><dd>{{ resolvidas }} <span class="texto-suave">({{ pct_resolvidas }}%)</span></dd></div>
+    <div><dt>Tempo médio até a prefeitura</dt><dd>{% if dias_ate_prefeitura is not None %}{{ dias_ate_prefeitura }} dia{{ dias_ate_prefeitura|pluralize }}{% else %}–{% endif %}</dd></div>
+  </dl>
+</section>
+
+<section class="card" aria-labelledby="titulo-categorias">
+  <h2 id="titulo-categorias">Por categoria</h2>
+  {% if por_categoria %}
+  <table class="tabela">
+    <thead><tr><th scope="col">Categoria</th><th scope="col">Demandas</th><th scope="col">Afetados</th></tr></thead>
+    <tbody>
+      {% for c in por_categoria %}
+      <tr><td>{{ c.categoria__icone }} {{ c.categoria__nome }}</td><td>{{ c.n }}</td><td>{{ c.afetados }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Ainda não há demandas registradas.</p>
+  {% endif %}
+</section>
+{% endblock %}
