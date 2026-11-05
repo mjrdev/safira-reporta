@@ -1,0 +1,15 @@
+{% extends "reports/base.html" %}
+{% block voltar %}<a class="voltar" href="{% url 'home' %}">← Voltar</a>{% endblock %}
+{% block cabecalho %}Como usamos seus dados{% endblock %}
+{% block conteudo %}
+<section class="card">
+  <p>Pedimos só o necessário para levar o problema à prefeitura:</p>
+  <ul>
+    <li><strong>Foto, categoria e localização</strong>: mostram o problema e entram no relatório para a prefeitura.</li>
+    <li><strong>Nome e telefone</strong>: só a associação vê, para tirar dúvidas ou avisar quando resolver. Não aparecem na consulta pública nem no relatório.</li>
+    <li>Quem apoia um pedido (“Também sou afetado”) tem o telefone guardado de forma cifrada, só para não contar a mesma pessoa duas vezes.</li>
+  </ul>
+  <p>Não pedimos CPF, e-mail nem endereço da sua casa. A localização escondida nas fotos é apagada.</p>
+  <p>Para corrigir ou apagar seus dados, fale com a Associação de Moradores do Safira.</p>
+</section>
+{% endblock %}

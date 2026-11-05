@@ -1,0 +1,59 @@
+{% extends "reports/base.html" %}
+{% block title %}{{ demanda.protocolo }} – Safira Reporta{% endblock %}
+{% block cabecalho %}{% if novo %}Resultado{% else %}Situação do pedido{% endif %}{% endblock %}
+{% block subtitulo %}Guarde seu protocolo para acompanhar{% endblock %}
+
+{% block conteudo %}
+<section class="card {% if novo %}sucesso{% endif %}">
+  {% if novo %}<h2>✓ Problema registrado!</h2>{% endif %}
+  <p>Seu protocolo é:</p>
+  <p class="protocolo" id="protocolo">{{ demanda.protocolo }}</p>
+  <div class="linha">
+    <button type="button" class="btn btn-secundario" data-copiar="{{ demanda.protocolo }}">📋 Copiar</button>
+    <a class="btn btn-primario" href="https://wa.me/?text=Meu%20protocolo%20no%20Safira%20Reporta:%20{{ demanda.protocolo }}" rel="noopener">💬 Compartilhar</a>
+  </div>
+</section>
+
+<section class="card resumo">
+  <img src="{{ demanda.foto.url }}" alt="Foto do problema: {{ demanda.categoria.nome }}" width="72" height="56">
+  <div>
+    <strong>{{ demanda.categoria.icone }} {{ demanda.categoria.nome }}</strong>
+    <p class="texto-suave">{{ demanda.ponto_referencia|default:"Localização marcada no mapa" }} · {{ demanda.total_afetados }} morador{{ demanda.total_afetados|pluralize:"es" }} afetado{{ demanda.total_afetados|pluralize }}</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Situação do pedido</h2>
+  <ol class="linha-tempo">
+    {% for valor, rotulo in demanda.Status.choices %}
+      {% with hist=demanda.historico.all %}
+      <li class="{% if valor == demanda.status %}atual{% endif %}">
+        <span class="marcador" aria-hidden="true">{% if forloop.counter0 <= demanda.indice_status %}✓{% else %}{{ forloop.counter }}{% endif %}</span>
+        <div>
+          <strong>{{ rotulo }}</strong>{% if valor == demanda.status %} <span class="selo">AGORA</span>{% endif %}
+          {% for h in hist %}{% if h.status_novo == valor %}<p class="texto-suave">{{ h.alterado_em|date:"d/m/Y" }}</p>{% endif %}{% endfor %}
+        </div>
+      </li>
+      {% endwith %}
+    {% endfor %}
+  </ol>
+</section>
+
+{% if not novo and demanda.status != 'resolvido' %}
+<details class="card">
+  <summary class="btn btn-secundario">👍 Também sou afetado por este problema</summary>
+  <form method="post" action="{% url 'apoiar' demanda.protocolo %}">
+    {% csrf_token %}
+    <label for="id_telefone">{{ apoio_form.telefone.label }}</label>
+    {{ apoio_form.telefone }}
+    <button class="btn btn-primario" type="submit">Confirmar apoio</button>
+  </form>
+</details>
+{% endif %}
+
+<div class="linha">
+  <a class="btn btn-secundario" href="{% url 'home' %}">🏠 Início</a>
+  <a class="btn btn-primario" href="{% url 'registrar' %}">+ Novo registro</a>
+</div>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'reports/comum.js' %}" defer></script>{% endblock %}
