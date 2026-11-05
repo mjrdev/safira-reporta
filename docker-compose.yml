@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: safira
+      POSTGRES_USER: safira
+      POSTGRES_PASSWORD: safira-dev
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+  web:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://safira:safira-dev@db:5432/safira
+    ports: ["8000:8000"]
+    depends_on: [db]
+volumes:
+  pgdata:
