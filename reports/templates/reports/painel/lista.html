@@ -1,0 +1,42 @@
+{% extends "reports/base.html" %}
+{% load static %}
+{% block title %}Painel – Safira Reporta{% endblock %}
+{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}
+{% block cabecalho %}Painel da associação{% endblock %}
+{% block subtitulo %}Olá, {{ user.get_short_name|default:user.username }} · <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}<button class="link-claro" type="submit">Sair</button></form>{% endblock %}
+
+{% block conteudo %}
+<form method="get" class="card filtros">
+  {{ form.as_p }}
+  <div class="linha">
+    <button class="btn btn-secundario" type="submit">Filtrar</button>
+    <a class="btn btn-primario" href="{% url 'relatorio' %}?{{ query }}">📄 Gerar relatório</a>
+  </div>
+</form>
+
+<div id="mapa" class="mapa card" aria-label="Mapa das demandas filtradas"></div>
+{{ pontos|json_script:"pontos-mapa" }}
+
+<p class="texto-suave">{{ pagina.paginator.count }} demanda{{ pagina.paginator.count|pluralize }}</p>
+{% for d in pagina %}
+  <a class="card item" href="{% url 'detalhe' d.protocolo %}">
+    <img src="{{ d.foto.url }}" alt="" width="64" height="56" loading="lazy">
+    <div>
+      <strong>{{ d.categoria.icone }} {{ d.categoria.nome }}</strong>
+      <span class="selo selo-{{ d.status }}">{{ d.get_status_display }}</span>
+      <p class="texto-suave">{{ d.protocolo }} · {{ d.criado_em|date:"d/m/Y" }} · {{ d.total_afetados }} afetado{{ d.total_afetados|pluralize }}<br>{{ d.ponto_referencia }}</p>
+    </div>
+  </a>
+{% empty %}
+  <p class="card">Nenhuma demanda com esses filtros.</p>
+{% endfor %}
+
+<nav class="linha" aria-label="Paginação">
+  {% if pagina.has_previous %}<a class="btn btn-secundario" href="?page={{ pagina.previous_page_number }}">← Anterior</a>{% endif %}
+  {% if pagina.has_next %}<a class="btn btn-secundario" href="?page={{ pagina.next_page_number }}">Próxima →</a>{% endif %}
+</nav>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<script src="{% static 'reports/mapa.js' %}" defer></script>
+{% endblock %}

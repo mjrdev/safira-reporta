@@ -1,0 +1,29 @@
+{% load static %}<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Relatório de demandas – Associação de Moradores do Safira</title>
+  <link rel="stylesheet" href="{% static 'reports/relatorio.css' %}">
+</head>
+<body>
+  <p class="nao-imprimir"><a href="{% url 'painel' %}">← Voltar ao painel</a> · Use “Imprimir → Salvar como PDF” no navegador.</p>
+  <header>
+    <h1>Relatório de demandas do bairro Safira – Paço do Lumiar (MA)</h1>
+    <p>Associação de Moradores do Safira · gerado em {% now "d/m/Y H:i" %} · {{ demandas|length }} demanda{{ demandas|length|pluralize }}</p>
+  </header>
+  {% for d in demandas %}
+    <article>
+      <img src="{{ d.foto.url }}" alt="Foto: {{ d.categoria.nome }}">
+      <div>
+        <h2>{{ d.protocolo }} – {{ d.categoria.nome }}</h2>
+        <p><strong>Local:</strong> {{ d.ponto_referencia|default:"–" }}{% if d.latitude %} ({{ d.latitude }}, {{ d.longitude }}){% endif %}</p>
+        <p><strong>Registrado em:</strong> {{ d.criado_em|date:"d/m/Y" }} · <strong>Moradores afetados:</strong> {{ d.total_afetados }} · <strong>Situação:</strong> {{ d.get_status_display }}</p>
+        <p>{{ d.descricao }}</p>
+      </div>
+    </article>
+  {% empty %}
+    <p>Nenhuma demanda com os filtros escolhidos.</p>
+  {% endfor %}
+</body>
+</html>
