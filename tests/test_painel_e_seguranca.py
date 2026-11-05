@@ -95,3 +95,8 @@ def test_relatorio_tem_dados_do_problema_sem_dados_pessoais(cliente_logado, dema
 def test_painel_mostra_dados_pessoais_apenas_para_logado(cliente_logado, demanda):
     resp = cliente_logado.get(reverse("detalhe", args=[demanda.protocolo]))
     assert "Cláudia" in resp.text
+
+
+def test_mapa_do_painel_tem_papel_e_rotulo_acessiveis(cliente_logado, demanda):
+    resp = cliente_logado.get(reverse("painel"))
+    assert 'role="region" aria-label="Mapa das demandas filtradas"' in resp.text

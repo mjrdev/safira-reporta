@@ -14,7 +14,7 @@
   </div>
 </form>
 
-<div id="mapa" class="mapa card" aria-label="Mapa das demandas filtradas"></div>
+<div id="mapa" class="mapa card" role="region" aria-label="Mapa das demandas filtradas"></div>
 {{ pontos|json_script:"pontos-mapa" }}
 
 <p class="texto-suave">{{ pagina.paginator.count }} demanda{{ pagina.paginator.count|pluralize }}</p>
