@@ -67,6 +67,8 @@ O arquivo `render.yaml` cria no [Render](https://render.com) o banco PostgreSQL 
 2. Preencha as variáveis marcadas como `sync: false` (usuário inicial do painel e, se quiser, `SENTRY_DSN` e o bucket de fotos).
 3. Cada push na `main` com a CI verde gera um novo deploy (`autoDeploy`).
 
+O `migrate` e a criação do usuário inicial rodam no início do `startCommand`, e não no build: durante o build o Render não dá acesso à rede privada onde fica o banco, e o plano free não tem `preDeployCommand`.
+
 Monitoramento pós-lançamento:
 
 - `GET /saude/` responde `{"status": "ok", "banco": "ok"}` (ou HTTP 503 se o banco cair). É o health check do Render e o endereço vigiado pelo UptimeRobot a cada 5 minutos.
