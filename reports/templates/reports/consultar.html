@@ -1,0 +1,15 @@
+{% extends "reports/base.html" %}
+{% block voltar %}<a class="voltar" href="{% url 'home' %}">← Voltar</a>{% endblock %}
+{% block cabecalho %}Consultar protocolo{% endblock %}
+{% block conteudo %}
+{% if nao_encontrado %}
+  <div class="alerta alerta-error" role="alert">⚠ Protocolo não encontrado. Confira se digitou igual ao que recebeu (ex.: SAF-2026-0042).</div>
+{% endif %}
+<form method="get" action="{% url 'consultar' %}" class="card" novalidate>
+  <label for="id_protocolo">{{ form.protocolo.label }}</label>
+  <input id="id_protocolo" name="protocolo" value="{{ form.protocolo.value|default:'' }}" placeholder="SAF-2026-0042" autocapitalize="characters"
+         {% if form.protocolo.errors %}aria-invalid="true" aria-describedby="erro-protocolo"{% endif %}>
+  {% for e in form.protocolo.errors %}<p class="erro" id="erro-protocolo">⚠ {{ e }}</p>{% endfor %}
+  <button class="btn btn-primario" type="submit">Consultar</button>
+</form>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "reports/base.html" %}
+{% block voltar %}<a class="voltar" href="{% url 'home' %}">← Voltar</a>{% endblock %}
+{% block cabecalho %}Problemas resolvidos{% endblock %}
+{% block conteudo %}
+{% for d in demandas %}
+  <article class="card">
+    <strong>✓ {{ d.categoria.icone }} {{ d.categoria.nome }}</strong>
+    <p class="texto-suave">{{ d.ponto_referencia|default:"Localização no mapa" }} · resolvido em {{ d.atualizado_em|date:"d/m/Y" }}</p>
+  </article>
+{% empty %}
+  <p class="card">Ainda não há problemas marcados como resolvidos.</p>
+{% endfor %}
+{% endblock %}

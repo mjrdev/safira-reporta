@@ -1,0 +1,83 @@
+{% extends "reports/base.html" %}
+{% load static %}
+{% block title %}Registrar problema – Safira Reporta{% endblock %}
+{% block voltar %}<a class="voltar" href="{% url 'home' %}">← Voltar</a>{% endblock %}
+{% block cabecalho %}Registrar problema{% endblock %}
+{% block subtitulo %}Todos os campos são obrigatórios, exceto quando indicado{% endblock %}
+
+{% block conteudo %}
+{% if proximas %}
+<section class="alerta alerta-warning card" aria-labelledby="titulo-proximas">
+  <h2 id="titulo-proximas">⚠ Já registraram este problema aqui perto</h2>
+  {% for d in proximas %}
+    <div class="proxima">
+      <p><strong>{{ d.categoria.icone }} {{ d.categoria.nome }}</strong> · {{ d.total_afetados }} morador{{ d.total_afetados|pluralize:"es" }} afetado{{ d.total_afetados|pluralize }}<br>
+      <span class="texto-suave">{{ d.ponto_referencia|default:"Perto da sua localização" }} · {{ d.get_status_display }}</span></p>
+      <form method="post" action="{% url 'apoiar' d.protocolo %}">
+        {% csrf_token %}
+        <input type="hidden" name="telefone" value="{{ apoio_form.initial.telefone }}">
+        <button class="btn btn-primario" type="submit">👍 Sim, também sou afetado</button>
+      </form>
+    </div>
+  {% endfor %}
+  <p class="texto-suave">É outro problema? Confira a foto abaixo e toque em “Enviar como novo problema”.</p>
+</section>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" novalidate id="form-registro">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="alerta alerta-error" role="alert">⚠ {{ form.non_field_errors.0 }}</div>
+  {% endif %}
+
+  <fieldset class="card">
+    <legend>1. Qual é o problema?</legend>
+    <div class="categorias">
+      {% for radio in form.categoria %}
+        <label class="categoria">{{ radio.tag }} <span>{{ radio.choice_label }}</span></label>
+      {% endfor %}
+    </div>
+    {% for e in form.categoria.errors %}<p class="erro" id="erro-categoria">⚠ {{ e }}</p>{% endfor %}
+  </fieldset>
+
+  <div class="card">
+    <label for="{{ form.foto.id_for_label }}">2. {{ form.foto.label }} <span class="texto-suave">(JPG ou PNG, até 2 MB)</span></label>
+    <input type="file" name="foto" id="{{ form.foto.id_for_label }}" accept="image/jpeg,image/png" capture="environment"
+           {% if form.foto.errors %}aria-invalid="true" aria-describedby="erro-foto"{% endif %}>
+    <img id="previa-foto" class="previa" alt="Prévia da foto escolhida" hidden>
+    {% for e in form.foto.errors %}<p class="erro" id="erro-foto">⚠ {{ e }}</p>{% endfor %}
+    {% if proximas %}<p class="texto-suave">Por segurança, escolha a foto de novo se for enviar como novo problema.</p>{% endif %}
+  </div>
+
+  <div class="card">
+    <p class="rotulo">3. Onde fica?</p>
+    <button type="button" class="btn btn-secundario" id="usar-localizacao">📍 Usar minha localização</button>
+    <p id="status-localizacao" class="texto-suave" aria-live="polite"></p>
+    {{ form.latitude }}{{ form.longitude }}
+    <label for="{{ form.ponto_referencia.id_for_label }}">Ou escreva a {{ form.ponto_referencia.label|lower }}</label>
+    {{ form.ponto_referencia }}
+    {% for e in form.ponto_referencia.errors %}<p class="erro">⚠ {{ e }}</p>{% endfor %}
+  </div>
+
+  <div class="card">
+    <label for="{{ form.descricao.id_for_label }}">4. {{ form.descricao.label }}</label>
+    {{ form.descricao }}
+    <p class="texto-suave direita"><span id="contador">0</span>/500</p>
+    {% for e in form.descricao.errors %}<p class="erro">⚠ {{ e }}</p>{% endfor %}
+
+    <label for="{{ form.nome_morador.id_for_label }}">{{ form.nome_morador.label }}</label>
+    {{ form.nome_morador }}
+    {% for e in form.nome_morador.errors %}<p class="erro">⚠ {{ e }}</p>{% endfor %}
+
+    <label for="{{ form.telefone_morador.id_for_label }}">{{ form.telefone_morador.label }}</label>
+    {{ form.telefone_morador }}
+    {% for e in form.telefone_morador.errors %}<p class="erro">⚠ {{ e }}</p>{% endfor %}
+    <p class="texto-suave">🔒 Seu nome e telefone só são vistos pela associação.</p>
+  </div>
+
+  {% if proximas %}<input type="hidden" name="confirmar_novo" value="1">{% endif %}
+  <button class="btn btn-primario" type="submit">{% if proximas %}Enviar como novo problema{% else %}Enviar problema →{% endif %}</button>
+</form>
+{% endblock %}
+
+{% block scripts %}<script src="{% static 'reports/registrar.js' %}" defer></script>{% endblock %}

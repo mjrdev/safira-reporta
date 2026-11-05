@@ -1,0 +1,32 @@
+{% load static %}<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Safira Reporta{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'reports/app.css' %}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    {% block voltar %}{% endblock %}
+    <h1>{% block cabecalho %}Safira Reporta{% endblock %}</h1>
+    <p>{% block subtitulo %}Associação de Moradores do Safira – Paço do Lumiar{% endblock %}</p>
+  </header>
+  <main id="conteudo">
+    {% if messages %}
+      <div aria-live="polite">
+        {% for m in messages %}
+          <div class="alerta alerta-{{ m.tags }}" role="status">
+            <span aria-hidden="true">{% if m.tags == 'success' %}✓{% elif m.tags == 'error' %}⚠{% else %}ℹ{% endif %}</span>
+            {{ m }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% block conteudo %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

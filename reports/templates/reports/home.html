@@ -1,0 +1,28 @@
+{% extends "reports/base.html" %}
+{% block conteudo %}
+<section class="card">
+  <h2>Viu um problema na sua rua?</h2>
+  <p>Registre aqui com foto e localização. A associação leva o pedido à prefeitura e você acompanha pelo protocolo.</p>
+</section>
+
+<div class="pilha">
+  <a class="btn btn-primario" href="{% url 'registrar' %}"><span aria-hidden="true">📷</span> Registrar problema</a>
+  <details class="card consulta">
+    <summary class="btn btn-secundario"><span aria-hidden="true">🔍</span> Consultar meu protocolo</summary>
+    <form method="get" action="{% url 'consultar' %}">
+      <label for="id_protocolo">Número do protocolo</label>
+      <input id="id_protocolo" name="protocolo" placeholder="SAF-2026-0042" autocapitalize="characters" required>
+      <button class="btn btn-primario" type="submit">Consultar</button>
+    </form>
+  </details>
+</div>
+
+<div class="numeros">
+  <div class="card"><strong>{{ totais.registrados }}</strong><span>problemas registrados</span></div>
+  <div class="card"><strong>{{ totais.levados }}</strong><span>levados à prefeitura</span></div>
+</div>
+
+<p class="card texto-suave">✔ Não precisa criar conta nem instalar aplicativo.<br>✔ Leva menos de 2 minutos.</p>
+<p class="centro"><a href="{% url 'resolvidos' %}">Ver problemas já resolvidos</a></p>
+<p class="centro"><a href="{% url 'privacidade' %}">🔒 Como usamos seus dados</a></p>
+{% endblock %}
