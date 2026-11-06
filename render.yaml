@@ -3,6 +3,9 @@
 databases:
   - name: safira-db
     plan: free
+    # Mesma região do serviço web: o endereço interno do banco (dpg-...-a) só
+    # resolve para serviços na mesma região. Sem isto o Render usa "oregon".
+    region: ohio
     databaseName: safira
     user: safira
 
@@ -15,8 +18,8 @@ services:
     buildCommand: >-
       pip install -r requirements.txt &&
       python manage.py collectstatic --noinput
-    # O build não acessa a rede privada do Render (onde está o banco) e o plano free
-    # não tem preDeployCommand: migrate e usuário inicial rodam no início do start.
+    # O plano free não tem preDeployCommand: migrate e usuário inicial rodam no
+    # início do start, quando o serviço já está na rede privada junto com o banco.
     startCommand: >-
       python manage.py migrate --noinput &&
       (python manage.py createsuperuser --noinput || true) &&

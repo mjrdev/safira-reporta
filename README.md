@@ -67,7 +67,7 @@ O arquivo `render.yaml` cria no [Render](https://render.com) o banco PostgreSQL 
 2. Preencha as variáveis marcadas como `sync: false` (usuário inicial do painel e, se quiser, `SENTRY_DSN` e o bucket de fotos).
 3. Cada push na `main` com a CI verde gera um novo deploy (`autoDeploy`).
 
-O `migrate` e a criação do usuário inicial rodam no início do `startCommand`, e não no build: durante o build o Render não dá acesso à rede privada onde fica o banco, e o plano free não tem `preDeployCommand`.
+O `migrate` e a criação do usuário inicial rodam no início do `startCommand`, porque o plano free não tem `preDeployCommand`. O banco e o serviço web precisam estar na **mesma região** (`ohio` no `render.yaml`): o endereço interno do banco (`dpg-...-a`) só resolve para serviços da mesma região. A região não muda depois que o recurso é criado; se ficarem diferentes, apague e recrie.
 
 Monitoramento pós-lançamento:
 
