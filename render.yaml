@@ -14,10 +14,13 @@ services:
     region: ohio
     buildCommand: >-
       pip install -r requirements.txt &&
-      python manage.py collectstatic --noinput &&
+      python manage.py collectstatic --noinput
+    # O build não acessa a rede privada do Render (onde está o banco) e o plano free
+    # não tem preDeployCommand: migrate e usuário inicial rodam no início do start.
+    startCommand: >-
       python manage.py migrate --noinput &&
-      (python manage.py createsuperuser --noinput || true)
-    startCommand: gunicorn config.wsgi:application --workers 2 --timeout 60 --access-logfile -
+      (python manage.py createsuperuser --noinput || true) &&
+      gunicorn config.wsgi:application --workers 2 --timeout 60 --access-logfile -
     healthCheckPath: /saude/
     autoDeploy: true
     envVars:
