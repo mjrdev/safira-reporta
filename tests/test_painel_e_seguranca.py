@@ -121,6 +121,27 @@ def test_saude_retorna_503_quando_o_banco_falha(client, db, monkeypatch):
     assert resp.json()["banco"] == "indisponivel"
 
 
+def test_saude_aceita_head_para_monitores(client, db):
+    resp = client.head(reverse("saude"))
+    assert resp.status_code == 200
+    assert resp.content == b""
+    assert "no-cache" in resp["Cache-Control"]
+
+
+def test_saude_head_retorna_503_quando_o_banco_falha(client, db, monkeypatch):
+    from django.db import connection
+
+    def quebrado():
+        raise RuntimeError("banco fora")
+
+    monkeypatch.setattr(connection, "cursor", quebrado)
+    assert client.head(reverse("saude")).status_code == 503
+
+
+def test_saude_recusa_metodos_que_alteram_dados(client, db):
+    assert client.post(reverse("saude")).status_code == 405
+
+
 def test_indicadores_exige_login(client):
     resp = client.get(reverse("indicadores"))
     assert resp.status_code == 302 and reverse("login") in resp["Location"]

@@ -10,7 +10,7 @@ from django.db.models import Avg, Count, F, Q, Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_POST, require_safe
 
 from .forms import ApoioForm, ConsultaForm, DemandaForm, FiltroPainelForm, StatusForm
 from .models import Demanda, HistoricoStatus
@@ -212,9 +212,12 @@ def indicadores(request):
 
 
 @never_cache
-@require_GET
+@require_safe
 def saude(request):
-    """Health check para o Render e o UptimeRobot: confere se a aplicação responde e o banco conecta."""
+    """Health check para o Render e o UptimeRobot: confere se a aplicação responde e o banco conecta.
+
+    Aceita GET e HEAD (require_safe): monitores como o UptimeRobot usam HEAD por padrão.
+    """
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
